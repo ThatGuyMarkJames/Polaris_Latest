@@ -36,6 +36,13 @@ POLAR_STATIONS: Dict[str, Dict[str, Any]] = {
         "default_mode": "Normal Operation",
         "default_research_intensity": 1.0,
         "default_heating_intensity": 1.0,
+        "default_p1_config": {
+            "nominal_jacket_power_kw": 3.0,
+            "min_battery_temp_c": -20.0,
+            "activation_threshold_c": -10.0,
+            "emergency_shutdown_threshold_c": -5.0,
+            "thermal_protection_mode": "auto"
+        },
         "loads": [
             {"id": "heat_life", "name": "Habitat & Life Support Thermal", "power_kw": 55.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
             {"id": "comm_nav", "name": "Satellite Uplink & Comms", "power_kw": 12.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
@@ -77,6 +84,13 @@ POLAR_STATIONS: Dict[str, Dict[str, Any]] = {
         "default_mode": "Normal Operation",
         "default_research_intensity": 0.9,
         "default_heating_intensity": 1.1,
+        "default_p1_config": {
+            "nominal_jacket_power_kw": 2.5,
+            "min_battery_temp_c": -20.0,
+            "activation_threshold_c": -10.0,
+            "emergency_shutdown_threshold_c": -5.0,
+            "thermal_protection_mode": "auto"
+        },
         "loads": [
             {"id": "heat_life", "name": "Primary Thermal Envelope", "power_kw": 48.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
             {"id": "comm_nav", "name": "Deep-Space & HF Radio Links", "power_kw": 10.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
@@ -117,6 +131,13 @@ POLAR_STATIONS: Dict[str, Dict[str, Any]] = {
         "default_mode": "High Research Operation",
         "default_research_intensity": 1.2,
         "default_heating_intensity": 1.2,
+        "default_p1_config": {
+            "nominal_jacket_power_kw": 6.0,
+            "min_battery_temp_c": -20.0,
+            "activation_threshold_c": -10.0,
+            "emergency_shutdown_threshold_c": -5.0,
+            "thermal_protection_mode": "auto"
+        },
         "loads": [
             {"id": "heat_life", "name": "Central Habitat Heating", "power_kw": 120.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
             {"id": "comm_nav", "name": "Airfield Radar & Satellite Comms", "power_kw": 35.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
@@ -157,6 +178,13 @@ POLAR_STATIONS: Dict[str, Dict[str, Any]] = {
         "default_mode": "Normal Operation",
         "default_research_intensity": 1.0,
         "default_heating_intensity": 1.0,
+        "default_p1_config": {
+            "nominal_jacket_power_kw": 3.0,
+            "min_battery_temp_c": -20.0,
+            "activation_threshold_c": -10.0,
+            "emergency_shutdown_threshold_c": -5.0,
+            "thermal_protection_mode": "auto"
+        },
         "loads": [
             {"id": "heat_life", "name": "Arctic Habitat HVAC", "power_kw": 28.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
             {"id": "comm_nav", "name": "Polar Satellite Antenna Link", "power_kw": 8.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
@@ -197,6 +225,13 @@ POLAR_STATIONS: Dict[str, Dict[str, Any]] = {
         "default_mode": "Extreme Cold Protocol",
         "default_research_intensity": 1.3,
         "default_heating_intensity": 1.5,
+        "default_p1_config": {
+            "nominal_jacket_power_kw": 4.5,
+            "min_battery_temp_c": -25.0,
+            "activation_threshold_c": -10.0,
+            "emergency_shutdown_threshold_c": -5.0,
+            "thermal_protection_mode": "auto"
+        },
         "loads": [
             {"id": "heat_life", "name": "Sub-zero Enclosure Thermal Barrier", "power_kw": 95.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},
             {"id": "comm_nav", "name": "TDRSS Satellite Array & Emergency Link", "power_kw": 25.0, "priority": "CRITICAL", "flexible": False, "min_op_pct": 100},

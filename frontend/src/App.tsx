@@ -15,7 +15,8 @@ import {
   AgentLog,
   AgentCycleResult,
   ScenarioDefinition,
-  LoadItem
+  LoadItem,
+  P0SurvivalHorizon
 } from './types';
 
 // Default Bharati Station fallback configuration
@@ -49,6 +50,13 @@ const DEFAULT_STATION: StationConfig = {
   operating_mode: 'Normal Operation',
   research_intensity: 1.0,
   heating_intensity: 1.0,
+  p1_config: {
+    nominal_jacket_power_kw: 3.0,
+    min_battery_temp_c: -20.0,
+    activation_threshold_c: -10.0,
+    emergency_shutdown_threshold_c: -5.0,
+    thermal_protection_mode: 'auto'
+  },
   loads: [
     { id: 'heat_life', name: 'Habitat & Life Support Thermal', power_kw: 55.0, priority: 'CRITICAL', flexible: false, min_op_pct: 100 },
     { id: 'comm_nav', name: 'Satellite Uplink & Comms', power_kw: 12.0, priority: 'CRITICAL', flexible: false, min_op_pct: 100 },
@@ -74,6 +82,7 @@ export function App() {
   const [weatherForecast, setWeatherForecast] = useState<WeatherTelemetry[]>([]);
   const [weatherSource, setWeatherSource] = useState<string>('Open-Meteo High-Resolution API');
   const [energyState, setEnergyState] = useState<InstantEnergyState | null>(null);
+  const [p0Horizon, setP0Horizon] = useState<P0SurvivalHorizon | undefined>();
   const [resilienceRisk, setResilienceRisk] = useState<any>({
     score: 35,
     level: 'MODERATE',
@@ -185,6 +194,9 @@ export function App() {
       setOptimalSchedule(optRes.schedule || []);
       setOptimalSummary(optRes.summary || null);
       setRecommendations(optRes.ai_recommendations || []);
+      if (optRes.p0_survival_horizon) {
+        setP0Horizon(optRes.p0_survival_horizon);
+      }
     } catch (err) {
       console.error('Forecast/Optimization error:', err);
     } finally {
@@ -199,6 +211,9 @@ export function App() {
       const sim = await apiClient.runSimulation(cfg, scenarioId);
       setSimResult(sim);
       setCurrentHour(0);
+      if (sim.p0_survival_horizon) {
+        setP0Horizon(sim.p0_survival_horizon);
+      }
 
       const agentRes = await apiClient.orchestrateAgents(cfg, scenarioId, sim);
       setAgentLogs(agentRes.agent_logs);
@@ -306,6 +321,7 @@ export function App() {
             weather={weather}
             weatherSourceLabel={weatherSource}
             energyState={energyState}
+            p0Horizon={p0Horizon}
             isLoadingWeather={isLoadingWeather}
             isLoadingState={isLoadingState}
             onCoordinatesChange={handleCoordinatesChange}

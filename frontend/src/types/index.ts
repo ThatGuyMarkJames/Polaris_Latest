@@ -9,6 +9,14 @@ export interface LoadItem {
   nominal_kw?: number;
 }
 
+export interface P1Config {
+  nominal_jacket_power_kw: number;
+  min_battery_temp_c: number;
+  activation_threshold_c: number;
+  emergency_shutdown_threshold_c: number;
+  thermal_protection_mode: string;
+}
+
 export interface StationConfig {
   station_id?: string;
   station_name: string;
@@ -39,6 +47,7 @@ export interface StationConfig {
   operating_mode: string;
   research_intensity: number;
   heating_intensity: number;
+  p1_config?: P1Config;
   loads: LoadItem[];
 }
 
@@ -72,8 +81,31 @@ export interface WeatherDataResponse {
   forecast_72h: WeatherTelemetry[];
 }
 
+export interface P0SurvivalHorizon {
+  operating_mode: 'NORMAL' | 'WARNING' | 'EMERGENCY';
+  operating_mode_color: string;
+  survival_hours_remaining: number;
+  conservative_survival_hours: number;
+  estimated_breach_time: string;
+  conservative_breach_time: string;
+  confidence_interval_hours: [number, number];
+  current_p0_load_kw: number;
+  expected_minimum_soc_pct: number;
+  conservative_minimum_soc_pct: number;
+  generator_contribution_kwh: number;
+  fuel_remaining_liters: number;
+  p1_shed_status: 'ACTIVE' | 'SHED';
+  p2_shed_status: 'ACTIVE' | 'CURTAILED';
+  p0_status: 'SECURE' | 'AT_RISK' | 'BREACHED';
+  explainability: string[];
+  recommended_actions: string[];
+}
+
 export interface InstantEnergyState {
   current_demand_kw: number;
+  p0_load_kw?: number;
+  p1_load_kw?: number;
+  p2_load_kw?: number;
   critical_load_kw: number;
   important_load_kw: number;
   deferrable_load_kw: number;
@@ -81,6 +113,7 @@ export interface InstantEnergyState {
   solar_direct_kw: number;
   solar_to_battery_kw: number;
   battery_soc_pct: number;
+  battery_temperature_c?: number;
   battery_available_energy_kwh: number;
   battery_discharging_kw: number;
   battery_charging_kw: number;
@@ -102,48 +135,21 @@ export interface ScenarioDefinition {
   wind_multiplier: number;
   generator_available: boolean;
   solar_available: boolean;
-  /** Phase 2: starting rime ice coverage on PV panels (%). Replaces static battery_capacity_multiplier. */
   initial_ice_pct: number;
-  /** Phase 2: optional scenario-specific ice aggressiveness coefficient. */
   humidity_factor_override?: number;
   duration_hours: number;
   severity: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL' | 'EMERGENCY';
   color: string;
 }
 
-/**
- * Phase 2: Real-time physics state for dashboard gauges and alerts.
- * Exposed by the simulation engine per timestep and by the instant-state endpoint.
- */
-export interface PhysicsState {
-  /** Rime ice coverage on PV panels, 0–100 % */
-  ice_coverage_pct: number;
-  /** Direction ice is moving this tick */
-  ice_trend: 'accumulating' | 'melting' | 'stable';
-  /** Total thermal power recoverable from diesel generator (kW) */
-  chp_heat_available_kw: number;
-  /** Electrical heating demand being offset by CHP waste heat (kW) */
-  chp_heat_displacing_kw: number;
-  /** Whether battery thermal blankets are active */
-  battery_heater_active: boolean;
-  /** Parasitic draw of battery heater (kW) */
-  battery_heater_kw: number;
-  /** Actual round-trip efficiency after Arrhenius correction (%) */
-  battery_eta_rte_pct: number;
-  /** Percentage reduction in RTE vs nominal (e.g. 12.4 = 12.4% worse than spec) */
-  arrhenius_derating_pct: number;
-}
-
-/**
- * A single hour timestep from a simulation track (Baseline or AI).
- * Phase 2 adds CHP, ice, and Arrhenius fields.
- */
 export interface SimulationTimestep {
   hour: number;
-  /** Raw station load (kW), excluding battery heater parasitic */
   demand_kw: number;
+  p0_load_kw?: number;
+  p1_load_kw?: number;
+  p2_load_kw?: number;
+  p1_jacket_active?: boolean;
   critical_load_kw?: number;
-  /** Total solar output after ice derating (kW) */
   solar_kw: number;
   solar_direct_kw: number;
   solar_charge_kw?: number;
@@ -154,35 +160,33 @@ export interface SimulationTimestep {
   generator_kw: number;
   generator_active: boolean;
   curtailed_kw: number;
+  p2_curtailed_kw?: number;
+  p0_unserved_kw?: number;
   fuel_remaining_l: number;
   fuel_consumed_l?: number;
   load_served_kw?: number;
-  // ── Phase 2: Dynamic physics state ────────────────────────────────────
-  /** Rime ice coverage on PV panels this hour (0–100 %) */
   ice_coverage_pct: number;
-  /** Waste heat recovered from diesel generator (kW thermal) */
   chp_heat_kw: number;
-  /** Electrical heating demand offset by CHP waste heat (kW) */
   chp_heat_displacing_kw: number;
-  /** Parasitic battery thermal management draw (kW); 0 when T > -20°C */
   battery_heater_kw: number;
-  /** Whether battery heater is active this tick */
   battery_heater_active: boolean;
-  /** Arrhenius-adjusted round-trip efficiency this timestep (%) */
   eta_rte_pct: number;
-  /** Electrical heating component of station demand (kW, CHP-offsettable) */
   thermal_load_kw: number;
 }
 
 export interface DualSimulationResult {
   scenario: ScenarioDefinition;
   duration_hours: number;
+  p0_survival_horizon?: P0SurvivalHorizon;
   metrics_comparison: {
     diesel_consumed_liters: { baseline: number; ai: number; unit: string };
     fuel_saved_liters: { value: number; percentage: number; unit: string };
     minimum_battery_soc: { baseline: number; ai: number; unit: string };
     critical_load_coverage: { baseline: number; ai: number; unit: string };
     renewable_utilization: { baseline: number; ai: number; unit: string };
+    p0_survival_hours?: { baseline: number; ai: number; unit: string };
+    p1_shutdown_duration?: { value: number; unit: string };
+    p2_curtailed_energy?: { value: number; unit: string };
     resilience_risk_score: { baseline: number; ai: number; unit: string };
     agent_interventions_count: number;
     plan_revisions_count: number;
@@ -190,8 +194,9 @@ export interface DualSimulationResult {
   baseline_timeline: SimulationTimestep[];
   ai_timeline: SimulationTimestep[];
   weather_timeline: WeatherTelemetry[];
-  /** Phase 2: ice coverage % per hour, shared by both tracks */
   ice_trajectory?: number[];
+  baseline_ice_trajectory?: number[];
+  mechanical_clearing_hours?: number[];
 }
 
 export interface AgentLog {

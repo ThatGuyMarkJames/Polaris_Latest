@@ -6,11 +6,14 @@ import { EnergyFlow } from '../components/EnergyFlow';
 import { StationConfigComponent } from '../components/StationConfig';
 import { LoadManagement } from '../components/LoadManagement';
 import { OptimizationTimeline } from '../components/OptimizationTimeline';
+import { P0SurvivalTimer } from '../components/P0SurvivalTimer';
+import { EmergencyPanel } from '../components/EmergencyPanel';
 import {
   StationConfig,
   WeatherTelemetry,
   InstantEnergyState,
-  LoadItem
+  LoadItem,
+  P0SurvivalHorizon
 } from '../types';
 
 interface DashboardPageProps {
@@ -18,6 +21,7 @@ interface DashboardPageProps {
   weather: WeatherTelemetry | null;
   weatherSourceLabel?: string;
   energyState: InstantEnergyState | null;
+  p0Horizon?: P0SurvivalHorizon;
   isLoadingWeather: boolean;
   isLoadingState: boolean;
   onCoordinatesChange: (lat: number, lon: number) => void;
@@ -37,6 +41,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   weather,
   weatherSourceLabel,
   energyState,
+  p0Horizon,
   isLoadingWeather,
   isLoadingState,
   onCoordinatesChange,
@@ -52,6 +57,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-12">
+      {/* 0. Emergency Banner (Activated during Warnings & Emergencies) */}
+      <EmergencyPanel
+        horizon={p0Horizon}
+        energyState={energyState || undefined}
+        sourceLabel={weatherSourceLabel || 'Synthetic telemetry — simulation mode'}
+      />
+
       {/* 1. Top Section: Station Coordinates & Live Atmospheric Weather */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6">
@@ -71,13 +83,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      {/* 2. Microgrid Telemetry KPIs */}
+      {/* 2. P0 Critical Life Support Survival Timer */}
+      <P0SurvivalTimer horizon={p0Horizon} />
+
+      {/* 3. Microgrid Telemetry KPIs */}
       <CurrentEnergyCard state={energyState} isLoading={isLoadingState} />
 
-      {/* 3. Active Energy Flow Diagram */}
+      {/* 4. Active Energy Flow Diagram */}
       <EnergyFlow state={energyState} />
 
-      {/* 4. Optimal 24-Hour Schedule & AI Recommendations */}
+      {/* 5. Optimal 24-Hour Schedule & AI Recommendations */}
       <OptimizationTimeline
         schedule={optimalSchedule}
         summary={optimalSummary}
@@ -86,21 +101,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         isLoading={isLoadingPlan}
       />
 
-      {/* 5. Station Equipment Configuration */}
+      {/* 6. Station Equipment Configuration */}
       <StationConfigComponent
         config={station}
         onChange={onStationConfigChange}
         onRecalculate={onRecalculateState}
       />
 
-      {/* 6. Dynamic Subsystem Load Priorities */}
+      {/* 7. Dynamic Subsystem Load Priorities */}
       <LoadManagement
         loads={station.loads}
         onChange={onLoadsChange}
         totalDemand={energyState?.current_demand_kw || 120}
-        criticalLoad={energyState?.critical_load_kw || 50}
-        importantLoad={energyState?.important_load_kw || 40}
-        deferrableLoad={energyState?.deferrable_load_kw || 30}
       />
     </div>
   );
